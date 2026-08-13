@@ -1,0 +1,19 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+
+# File hasil compile
+*.so
+*.pyd
+
+# File IDE
+.vscode/
+.idea/
+*.swp
+
+# File assets
+assets/videos/*.mp4
