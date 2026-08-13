@@ -5,6 +5,7 @@ Mengintegrasikan Live Camera Feed, Panel Kontrol, dan Monitor System.
 """
 import time
 import cv2
+import os
 from PIL import Image, ImageTk
 import customtkinter as ctk
 
@@ -28,7 +29,16 @@ class MemeifyApp(ctk.CTk):
         self.cap = cv2.VideoCapture(0)
         self.engine = MemeEngine()
         self.active_video = None
-        self.spiderman_img = cv2.imread(MEME_REGISTRY["spiderman"]["path"], cv2.IMREAD_UNCHANGED)
+        
+        # Load Spiderman Image dengan Error Handling
+        img_path = MEME_REGISTRY["spiderman"]["path"]
+        if os.path.exists(img_path):
+            self.spiderman_img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+            if self.spiderman_img is None:
+                print(f"Warning: Gagal membaca gambar di {img_path}")
+        else:
+            print(f"Warning: File gambar tidak ditemukan di {img_path}")
+            self.spiderman_img = None
 
         # FPS Tracker
         self.prev_time = time.time()
@@ -134,7 +144,19 @@ class MemeifyApp(ctk.CTk):
         # 3. TRIGGER CHECKING
         if self.switch_jokowi.get() and self.engine.check_jokowi_pose(landmarks):
             self.status_label.configure(text="Trigger: Jokowi Pose!")
-            self.active_video = MemeVideoPlayer(MEME_REGISTRY["jokowi_berjuang"]["path"])
+            # Cek apakah video sudah diputar, jika belum, coba load
+            if self.active_video is None or not self.active_video.is_playing:
+                video_path = MEME_REGISTRY["jokowi_berjuang"]["path"]
+                if os.path.exists(video_path):
+                    try:
+                        self.active_video = MemeVideoPlayer(video_path)
+                    except Exception as e:
+                        self.status_label.configure(text=f"Error: Video corrupt!")
+                        print(f"Error loading video: {e}")
+                        self.active_video = None
+                else:
+                    self.status_label.configure(text="Error: Video not found!")
+                    self.active_video = None
 
         elif self.switch_spiderman.get() and self.engine.check_spiderman_pose(landmarks):
             self.status_label.configure(text="Trigger: Spiderman Pose!")
